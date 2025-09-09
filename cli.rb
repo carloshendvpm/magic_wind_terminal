@@ -17,7 +17,13 @@ if ENV['GOOGLE_API_KEY'].nil? || ENV['GOOGLE_API_KEY'].empty?
   exit 1
 end
 
-chat = RubyLLM.chat(model: "gemini-2.5-flash")
+begin
+  chat = RubyLLM.chat(model: "gemini-2.5-flash")
+  puts "✅ Conectado ao Gemini 2.5 Flash"
+rescue => error
+  puts "❌ Erro ao conectar com Gemini: #{error.message}"
+  exit 1
+end
 
 puts "Digite o que você quer executar (ou 'sair' para encerrar):"
 
