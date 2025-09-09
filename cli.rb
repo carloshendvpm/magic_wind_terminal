@@ -25,22 +25,68 @@ rescue => error
   exit 1
 end
 
-puts "Digite o que você quer executar (ou 'sair' para encerrar):"
+puts "\n🤖 Magic Wind CLI"
+puts "Digite comandos em linguagem natural e eles serão convertidos em comandos de terminal Unix/Linux"
+puts "Digite 'sair', 'quit' ou 'exit' para encerrar"
+puts "Digite 'ajuda' para ver exemplos\n\n"
 
 loop do
-  print "> "
-  input = gets.strip
-  break if input.downcase == "sair"
+  print "💬 > "
+  
+  begin
+    input = gets&.strip
+    break if input.nil? 
+    
+    case input.downcase
+    when "sair", "quit", "exit"
+      puts "👋 Tchau!"
+      break
+    when "ajuda", "help"
+      puts <<~HELP
+        
+        📋 Exemplos de comandos:
+        • "listar arquivos" → ls
+        • "mostrar diretório atual" → pwd
+        • "criar pasta teste" → mkdir teste
+        • "ver conteúdo do arquivo" → cat arquivo.txt
+        • "procurar por texto" → grep "texto" arquivo
+        
+      HELP
+      next
+    when ""
+      next
+    end
 
-  prompt = <<~PROMPT
-    Converta a instrução abaixo em um comando de terminal válido (sem explicação, apenas o comando):
-    "#{input}"
-  PROMPT
+    print "🔄 Processando... "
+    
+    prompt = <<~PROMPT
+      Converta a instrução em português abaixo em um comando de terminal Unix/Linux válido.
+      Responda APENAS com o comando, sem explicações ou texto adicional:
+      
+      "#{input}"
+    PROMPT
 
-  response = chat.ask(prompt)
-
-  command = response.strip
-  puts "Executando: #{command}"
-
-  system(command)
+    response = chat.ask(prompt)
+    command = response.content.strip.gsub(/^`|`$/, '').strip
+    
+    puts "\r✨ Comando: #{command}"
+    print "🚀 Executar? (s/N): "
+    
+    confirm = gets&.strip&.downcase
+    if confirm == "s" || confirm == "sim" || confirm == "y" || confirm == "yes"
+      puts "📋 Executando: #{command}"
+      success = system(command)
+      puts success ? "✅ Concluído" : "❌ Erro na execução"
+    else
+      puts "⏭️  Comando cancelado"
+    end
+    
+    puts
+    
+  rescue Interrupt
+    puts "\n👋 Interrompido pelo usuário"
+    break
+  rescue => e
+    puts "\n❌ Erro: #{e.message}"
+  end
 end
