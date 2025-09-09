@@ -2,8 +2,13 @@
 require "ruby_llm"
 require "dotenv/load"
 
-RubyLLM.configure do |config|
-  config.gemini_api_key = ENV['GOOGLE_API_KEY']
+begin
+  RubyLLM.configure do |config|
+    config.gemini_api_key = ENV['GOOGLE_API_KEY']
+  end
+rescue => e
+  puts "Erro na configuração: #{e.message}"
+  exit 1
 end
 
 chat = RubyLLM.chat(model: "gemini-2.5-flash")
