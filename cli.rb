@@ -28,7 +28,8 @@ end
 puts "\n🤖 Magic Wind CLI"
 puts "Digite comandos em linguagem natural e eles serão convertidos em comandos de terminal Unix/Linux"
 puts "Digite 'sair', 'quit' ou 'exit' para encerrar"
-puts "Digite 'ajuda' para ver exemplos\n\n"
+puts "Digite 'ajuda' para ver exemplos"
+puts "💡 Dica: Crie um arquivo 'context.md' para fornecer contexto adicional aos comandos\n\n"
 
 loop do
   print "💬 > "
@@ -51,6 +52,11 @@ loop do
         • "ver conteúdo do arquivo" → cat arquivo.txt
         • "procurar por texto" → grep "texto" arquivo
         
+        💡 Contexto personalizado:
+        • Crie um arquivo 'context.md' no diretório atual
+        • Adicione informações sobre seu projeto, aliases, caminhos comuns
+        • O CLI usará esse contexto para comandos mais precisos
+        
       HELP
       next
     when ""
@@ -59,8 +65,16 @@ loop do
 
     print "🔄 Processando... "
     
+    context = ""
+    if File.exist?("context.md")
+      context = File.read("context.md")
+    end
+
     prompt = <<~PROMPT
+      #{context}
+
       Converta a instrução em português abaixo em um comando de terminal Unix/Linux válido.
+      Use o contexto acima como referência para comandos comuns.
       Responda APENAS com o comando, sem explicações ou texto adicional:
       
       "#{input}"
@@ -70,6 +84,7 @@ loop do
     command = response.content.strip.gsub(/^`|`$/, '').strip
     
     puts "\r✨ Comando: #{command}"
+    
     print "🚀 Executar? (s/N): "
     
     confirm = gets&.strip&.downcase
