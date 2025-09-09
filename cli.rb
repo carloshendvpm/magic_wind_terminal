@@ -11,6 +11,12 @@ rescue => e
   exit 1
 end
 
+if ENV['GOOGLE_API_KEY'].nil? || ENV['GOOGLE_API_KEY'].empty?
+  puts "⚠️  GOOGLE_API_KEY não encontrada no arquivo .env"
+  puts "Opsss é necessário adicionar sua chave da API do Google Gemini no arquivo .env"
+  exit 1
+end
+
 chat = RubyLLM.chat(model: "gemini-2.5-flash")
 
 puts "Digite o que você quer executar (ou 'sair' para encerrar):"
