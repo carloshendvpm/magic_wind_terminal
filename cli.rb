@@ -18,8 +18,30 @@ if ENV['GOOGLE_API_KEY'].nil? || ENV['GOOGLE_API_KEY'].empty?
 end
 
 begin
-  chat = RubyLLM.chat(model: "gemini-2.5-flash")
-  puts "✅ Conectado ao Gemini 2.5 Flash"
+  base_chat = RubyLLM.chat(model: "gemini-2.5-flash")
+  
+  system_instructions = <<~INSTRUCTIONS
+    Você é um assistente especializado em converter comandos em linguagem natural (português) 
+    para comandos Unix/Linux válidos e seguros.
+
+    REGRAS IMPORTANTES:
+    - Responda SEMPRE apenas com o comando, sem explicações
+    - Use comandos seguros e não destrutivos
+    - Para listagem de arquivos, prefira 'ls -la' 
+    - Para busca de texto, use 'grep -r' quando apropriado
+    - Se não souber o comando exato, sugira a alternativa mais segura
+    - NUNCA use comandos como 'rm -rf /', 'dd', 'format', ou outros destrutivos
+    - Prefira comandos que não modificam o sistema permanentemente
+    
+    Exemplos:
+    - "listar arquivos" → ls -la
+    - "procurar arquivo" → find . -name
+    - "ver conteúdo" → cat
+    - "criar diretório" → mkdir
+  INSTRUCTIONS
+  
+  chat = base_chat.with_instructions(system_instructions).with_temperature(0.2)
+  puts "✅ Conectado ao modelo: Gemini 2.5 Flash"
 rescue => error
   puts "❌ Erro ao conectar com Gemini: #{error.message}"
   exit 1
@@ -70,15 +92,16 @@ loop do
       context = File.read("context.md")
     end
 
-    prompt = <<~PROMPT
-      #{context}
-
-      Converta a instrução em português abaixo em um comando de terminal Unix/Linux válido.
-      Use o contexto acima como referência para comandos comuns.
-      Responda APENAS com o comando, sem explicações ou texto adicional:
-      
+    prompt = if context.empty?
       "#{input}"
-    PROMPT
+    else
+      <<~PROMPT
+        Contexto do projeto:
+        #{context}
+
+        Instrução: #{input}
+      PROMPT
+    end
 
     response = chat.ask(prompt)
     command = response.content.strip.gsub(/^`|`$/, '').strip
