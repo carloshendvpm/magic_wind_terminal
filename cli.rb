@@ -53,6 +53,35 @@ puts "Digite 'sair', 'quit' ou 'exit' para encerrar"
 puts "Digite 'ajuda' para ver exemplos"
 puts "💡 Dica: Crie um arquivo 'context.md' para fornecer contexto adicional aos comandos\n\n"
 
+def dangerous_command?(command)
+  dangerous_patterns = [
+    /\brm\s+(-[rf]+\s+)?\//, # rm com caminho absoluto
+    /\brm\s+(-[rf]+\s+)?\*/, # rm com wildcard
+    /\brm\s+(-[rf]+\s+)?\.\*/, # rm com padrão perigoso
+    /\bdd\s/, # comando dd
+    /\b(sudo\s+)?rm\s+(-[rf]+\s+)?\//,  # sudo rm
+    />\s*\/dev\/sd[a-z]/, # redirecionamento para dispositivos
+    /\bformat\b/, # comando format
+    /\bfdisk\b/, # fdisk
+    /\bmkfs\b/, # mkfs
+    /\b:\s*\(\)\s*\{.*\}\s*;/, # fork bomb
+    /\bkill(all)?\s+(-9\s+)?-1/, # kill -1
+    /\bshutdown\b/, # shutdown
+    /\breboot\b/, # reboot
+    /\binit\s+0/, # init 0
+    /\b(wget|curl).*(\||;|&&)/, # download e execução
+    /\bchmod\s+777/, # chmod 777 perigoso
+    /\bchown.*root/, # mudança para root
+    /etc\/passwd/, # modificação de arquivos críticos
+    /etc\/shadow/,
+    /proc\/.*\/mem/,
+    /\bmv\s+.*\/etc/, # mover arquivos para /etc
+    /\bcp\s+.*\/etc/  # copiar arquivos para /etc
+  ]
+  
+  dangerous_patterns.any? { |pattern| command.match?(pattern) }
+end
+
 loop do
   print "💬 > "
   
@@ -108,15 +137,20 @@ loop do
     
     puts "\r✨ Comando: #{command}"
     
-    print "🚀 Executar? (s/N): "
-    
-    confirm = gets&.strip&.downcase
-    if confirm == "s" || confirm == "sim" || confirm == "y" || confirm == "yes"
-      puts "📋 Executando: #{command}"
-      success = system(command)
-      puts success ? "✅ Concluído" : "❌ Erro na execução"
+    if dangerous_command?(command)
+      puts "🚨 Comando perigoso detectado e bloqueado por segurança!"
+      puts "⚠️  Este comando pode ser destrutivo ou inseguro"
     else
-      puts "⏭️  Comando cancelado"
+      print "🚀 Executar? (s/N): "
+      
+      confirm = gets&.strip&.downcase
+      if confirm == "s" || confirm == "sim" || confirm == "y" || confirm == "yes"
+        puts "📋 Executando: #{command}"
+        success = system(command)
+        puts success ? "✅ Concluído" : "❌ Erro na execução"
+      else
+        puts "⏭️  Comando cancelado"
+      end
     end
     
     puts
