@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require "ruby_llm"
 require "dotenv/load"
+require "readline"
 
 begin
   RubyLLM.configure do |config|
@@ -51,7 +52,16 @@ puts "\n🤖 Magic Wind CLI"
 puts "Digite comandos em linguagem natural e eles serão convertidos em comandos de terminal Unix/Linux"
 puts "Digite 'sair', 'quit' ou 'exit' para encerrar"
 puts "Digite 'ajuda' para ver exemplos"
-puts "💡 Dica: Crie um arquivo 'context.md' para fornecer contexto adicional aos comandos\n\n"
+puts "💡 Dica: Crie um arquivo 'context.md' para fornecer contexto adicional aos comandos"
+puts "⌨️  Use TAB para autocompletar, setas ↑↓ para histórico\n\n"
+
+Readline.completion_append_character = " "
+Readline.completion_proc = proc do |s|
+  commands = ["listar arquivos", "mostrar diretório", "criar pasta", "ver conteúdo", 
+              "procurar por", "copiar arquivo", "mover arquivo", "deletar arquivo",
+              "permissões do arquivo", "espaço em disco", "processos rodando"]
+  commands.grep(/^#{Regexp.escape(s)}/i)
+end
 
 def dangerous_command?(command)
   dangerous_patterns = [
@@ -83,10 +93,8 @@ def dangerous_command?(command)
 end
 
 loop do
-  print "💬 > "
-  
   begin
-    input = gets&.strip
+    input = Readline.readline("💬 > ", true)&.strip
     break if input.nil? 
     
     case input.downcase
