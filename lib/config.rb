@@ -50,7 +50,7 @@ module MagicWind
 
     def self.create_chat_instance
       base_chat = RubyLLM.chat(model: "gemini-2.5-flash")
-      chat = base_chat.with_instructions(SYSTEM_INSTRUCTIONS).with_temperature(0.2)
+      chat = base_chat.with_instructions(SYSTEM_INSTRUCTIONS).with_temperature(0.3)
       puts "✅ Conectado ao modelo: Gemini 2.5 Flash"
       chat
     rescue => error
